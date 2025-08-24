@@ -372,7 +372,7 @@
         }
         
         // Save marks
-        function saveMarks() {
+        async function saveMarks() {
             const marks = document.getElementById('marksInput').value;
             
             // Validate marks (whole numbers only)
@@ -387,8 +387,32 @@
                 return;
             }
             
+            // Save locally first
             saveMarksToStorage(currentSubject, marks);
-            alert('Marks saved successfully! 📝\n\nYou can now use the "Online Update" button in Excel to import these marks.');
+            
+            // Also save to server
+            try {
+                const response = await fetch('/api/marks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        subject: currentSubject,
+                        marks: marks
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Marks saved successfully! 📝\n\nYou can now use the "Online Update" button in Excel to import these marks.');
+                } else {
+                    // Fallback to local storage if server save fails
+                    alert('Marks saved locally! 📝\n\nNote: Server save failed, but marks are stored in your browser.\nYou can still use the "Online Update" button in Excel.');
+                }
+            } catch (error) {
+                // Fallback to local storage if server is unavailable
+                alert('Marks saved locally! 📝\n\nNote: Could not connect to server, but marks are stored in your browser.\nYou can still use the "Online Update" button in Excel.');
+            }
         }
         
         // Add event listeners
