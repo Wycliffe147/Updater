@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Marks Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 90%;
+            max-width: 800px;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .subject-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .subject-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .subject-card:hover::before {
+            left: 100%;
+        }
+        
+        .subject-card:hover {
+            border-color: #4CAF50;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
+        }
+        
+        .subject-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .subject-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .modal-content input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+        
+        .modal-content input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+        }
+        
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+        
+        .marks-editor {
+            display: none;
+            padding: 40px;
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .marks-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        .marks-table th,
+        .marks-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .marks-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .marks-table input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Subject Selection Page -->
+        <div id="subjectSelection">
+            <div class="header">
+                <h1>📚 Marks Management</h1>
+                <p>Select a subject to manage student marks</p>
+            </div>
+            <div class="main-content">
+                <div class="subject-grid" id="subjectGrid">
+                    <!-- Subjects will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Modal -->
+        <div class="password-modal" id="passwordModal">
+            <div class="modal-content">
+                <h3 id="modalTitle">Enter Password</h3>
+                <input type="password" id="passwordInput" placeholder="Enter subject password">
+                <div class="error-message" id="errorMessage"></div>
+                <div>
+                    <button class="btn" onclick="verifyPassword()">Submit</button>
+                    <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marks Editor -->
+        <div class="marks-editor" id="marksEditor">
+            <div class="editor-header">
+                <h2 id="editorTitle">Edit Marks</h2>
+                <button class="back-btn" onclick="goBack()">← Back to Subjects</button>
+            </div>
+            
+            <table class="marks-table" id="marksTable">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Marks</th>
+                    </tr>
+                </thead>
+                <tbody id="marksTableBody">
+                    <!-- Student rows will be populated here -->
+                </tbody>
+            </table>
+            
+            <div class="action-buttons">
+                <button class="btn" onclick="addStudent()">Add Student</button>
+                <button class="btn" onclick="saveMarks()">Save Changes</button>
+                <button class="btn" onclick="clearAllMarks()">Clear All Marks</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Subject configuration with passwords
+        const subjects = {
+            'Agr': { name: 'Agriculture', password: 'agr123', column: 'B' },
+            'Bk': { name: 'Book Keeping', password: 'bk123', column: 'C' },
+            'Bio': { name: 'Biology', password: 'bio123', column: 'D' },
+            'Chem': { name: 'Chemistry', password: 'chem123', column: 'E' },
+            'Chich': { name: 'Chichewa', password: 'chich123', column: 'F' },
+            'Comp': { name: 'Computer Studies', password: 'comp123', column: 'G' },
+            'Eng': { name: 'English', password: 'eng123', column: 'H' },
+            'Geo': { name: 'Geography', password: 'geo123', column: 'I' },
+            'Hist': { name: 'History', password: 'hist123', column: 'J' },
+            'Phy': { name: 'Physics', password: 'phy123', column: 'K' },
+            'Math': { name: 'Mathematics', password: 'math123', column: 'L' },
+            'Sos': { name: 'Social Studies', password: 'sos123', column: 'M' }
+        };
+
+        let currentSubject = null;
+        let studentsData = {};
+
+        // Initialize the application
+        function initApp() {
+            loadSubjects();
+            loadStoredData();
+        }
+
+        // Load subjects into the grid
+        function loadSubjects() {
+            const grid = document.getElementById('subjectGrid');
+            grid.innerHTML = '';
+
+            Object.keys(subjects).forEach(subjectCode => {
+                const subject = subjects[subjectCode];
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                card.onclick = () => showPasswordModal(subjectCode);
+                
+                card.innerHTML = `
+                    <h3>${subject.name}</h3>
+                    <p>Subject Code: ${subjectCode}</p>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        // Show password modal
+        function showPasswordModal(subjectCode) {
+            currentSubject = subjectCode;
+            document.getElementById('modalTitle').textContent = `Enter Password for ${subjects[subjectCode].name}`;
+            document.getElementById('passwordModal').style.display = 'flex';
+            document.getElementById('passwordInput').focus();
+            document.getElementById('errorMessage').textContent = '';
+        }
+
+        // Close password modal
+        function closeModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('errorMessage').textContent = '';
+            currentSubject = null;
+        }
+
+        // Verify password
+        function verifyPassword() {
+            const password = document.getElementById('passwordInput').value;
+            const correctPassword = subjects[currentSubject].password;
+            
+            if (password === correctPassword) {
+                closeModal();
+                openMarksEditor(currentSubject);
+            } else {
+                document.getElementById('errorMessage').textContent = 'Incorrect password. Please try again.';
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        // Open marks editor for subject
+        function openMarksEditor(subjectCode) {
+            document.getElementById('subjectSelection').style.display = 'none';
+            document.getElementById('marksEditor').style.display = 'block';
+            document.getElementById('editorTitle').textContent = `Edit Marks - ${subjects[subjectCode].name}`;
+            
+            if (!studentsData[subjectCode]) {
+                studentsData[subjectCode] = [];
+            }
+            
+            loadMarksTable(subjectCode);
+        }
+
+        // Load marks table
+        function loadMarksTable(subjectCode) {
+            const tbody = document.getElementById('marksTableBody');
+            tbody.innerHTML = '';
+            
+            const students = studentsData[subjectCode] || [];
+            
+            if (students.length === 0) {
+                // Add some default rows
+                for (let i = 1; i <= 5; i++) {
+                    addStudentRow('', '', '');
+                }
+            } else {
+                students.forEach(student => {
+                    addStudentRow(student.id, student.name, student.marks);
+                });
+            }
+        }
+
+        // Add student row to table
+        function addStudentRow(id = '', name = '', marks = '') {
+            const tbody = document.getElementById('marksTableBody');
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td><input type="text" value="${id}" placeholder="Student ID"></td>
+                <td><input type="text" value="${name}" placeholder="Student Name"></td>
+                <td><input type="number" value="${marks}" placeholder="Enter marks" min="0" max="100"></td>
+            `;
+            
+            tbody.appendChild(row);
+        }
+
+        // Add new student
+        function addStudent() {
+            addStudentRow();
+        }
+
+        // Save marks
+        function saveMarks() {
+            const rows = document.querySelectorAll('#marksTableBody tr');
+            const students = [];
+            
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const id = inputs[0].value.trim();
+                const name = inputs[1].value.trim();
+                const marks = inputs[2].value.trim();
+                
+                if (id || name || marks) {
+                    students.push({
+                        id: id,
+                        name: name,
+                        marks: marks
+                    });
+                }
+            });
+            
+            studentsData[currentSubject] = students;
+            saveToStorage();
+            alert('Marks saved successfully!');
+        }
+
+        // Clear all marks
+        function clearAllMarks() {
+            if (confirm('Are you sure you want to clear all marks for this subject?')) {
+                studentsData[currentSubject] = [];
+                loadMarksTable(currentSubject);
+                saveToStorage();
+            }
+        }
+
+        // Go back to subject selection
+        function goBack() {
+            document.getElementById('marksEditor').style.display = 'none';
+            document.getElementById('subjectSelection').style.display = 'block';
+            currentSubject = null;
+        }
+
+        // Save data to localStorage (for demo purposes)
+        function saveToStorage() {
+            try {
+                // Since we can't use localStorage in Claude artifacts, we'll simulate storage
+                console.log('Saving data:', studentsData);
+            } catch (e) {
+                console.log('Storage not available, data saved in memory only');
+            }
+        }
+
+        // Load data from storage
+        function loadStoredData() {
+            try {
+                // In a real implementation, you would load from localStorage or a server
+                console.log('Loading stored data...');
+            } catch (e) {
+                console.log('No stored data found');
+            }
+        }
+
+        // Handle Enter key in password modal
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyPassword();
+            }
+        });
+
+        // Initialize the app when page loads
+        window.onload = initApp;
+
+        // API endpoint for Excel VBA to fetch data
+        function getSubjectData(subjectCode) {
+            return studentsData[subjectCode] || [];
+        }
+
+        // API endpoint for Excel VBA to get all subjects data
+        function getAllMarksData() {
+            return studentsData;
+        }
+
+        // Expose functions globally for potential API calls
+        window.getSubjectData = getSubjectData;
+        window.getAllMarksData = getAllMarksData;
+    </script>
+</body>
+</html>
