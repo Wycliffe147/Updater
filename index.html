@@ -188,6 +188,33 @@
         <div class="header">
             <h1>📚 Marks Updater</h1>
             <p>Select a subject to edit marks</p>
+            <button onclick="showSetupHelper()" style="background: #17a2b8; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">⚙️ Setup Helper</button>
+            <div id="setupHelper" class="marks-editor" style="display: none;">
+            <button class="back-btn" onclick="showSubjectSelection()">← Back to Subjects</button>
+            
+            <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h3>🔧 Environment Variables Setup Helper</h3>
+                <p>This tool helps you set up permanent storage using Vercel Environment Variables.</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <h4>Quick Setup (Recommended)</h4>
+                <p>1. Save marks for any subject using the interface above</p>
+                <p>2. The system will show you the exact environment variable to create</p>
+                <p>3. Go to Vercel Dashboard → Settings → Environment Variables</p>
+                <p>4. Add the variable and redeploy</p>
+            </div>
+            
+            <button onclick="generateSampleCommands()" class="save-btn" style="margin-bottom: 20px;">
+                Generate Sample CLI Commands
+            </button>
+            
+            <div id="setupOutput" style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-height: 100px; font-family: monospace; white-space: pre-wrap; display: none;">
+            </div>
+            
+            <button onclick="checkStatus()" class="back-btn" style="background: #28a745;">
+                Check Current Status
+            </button>
         </div>
         
         <div id="subjectSelection" class="subject-grid">
@@ -264,6 +291,8 @@
         </div>
     </div>
     
+    </div>
+    
     <div id="passwordModal" class="password-modal">
         <div class="password-content">
             <h3>Enter Password</h3>
@@ -307,10 +336,62 @@
             localStorage.setItem(`marks_${subject}`, marks);
         }
         
-        // Show subject selection
+        // Show setup helper
+        function showSetupHelper() {
+            document.getElementById('subjectSelection').style.display = 'none';
+            document.getElementById('marksEditor').style.display = 'none';
+            document.getElementById('setupHelper').style.display = 'block';
+        }
+        
+        // Generate sample CLI commands
+        async function generateSampleCommands() {
+            try {
+                const response = await fetch('/api/setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ generateAll: true })
+                });
+                
+                const result = await response.json();
+                const output = document.getElementById('setupOutput');
+                
+                output.textContent = `Sample CLI Commands:\n\n${result.commands.join('\n\n')}\n\n` +
+                                   `Note: ${result.note}\n\n` +
+                                   `Sample marks that will be set:\n${result.sample_marks}`;
+                output.style.display = 'block';
+            } catch (error) {
+                document.getElementById('setupOutput').textContent = 'Error generating commands: ' + error.message;
+                document.getElementById('setupOutput').style.display = 'block';
+            }
+        }
+        
+        // Check current status
+        async function checkStatus() {
+            try {
+                const response = await fetch('/api/setup');
+                const result = await response.json();
+                const output = document.getElementById('setupOutput');
+                
+                let statusText = 'Current Environment Variables Status:\n\n';
+                
+                Object.entries(result.status).forEach(([subject, info]) => {
+                    const status = info.hasData ? '✅ SET' : '❌ NOT SET';
+                    statusText += `${subject} (${info.variable}): ${status}\n`;
+                });
+                
+                output.textContent = statusText;
+                output.style.display = 'block';
+            } catch (error) {
+                document.getElementById('setupOutput').textContent = 'Error checking status: ' + error.message;
+                document.getElementById('setupOutput').style.display = 'block';
+            }
+        }
+        
+        // Update showSubjectSelection to hide setup helper too
         function showSubjectSelection() {
             document.getElementById('subjectSelection').style.display = 'grid';
             document.getElementById('marksEditor').style.display = 'none';
+            document.getElementById('setupHelper').style.display = 'none';
         }
         
         // Show password modal
@@ -390,7 +471,7 @@
             // Save locally first
             saveMarksToStorage(currentSubject, marks);
             
-            // Also save to server
+            // Also save to server (will provide setup instructions)
             try {
                 const response = await fetch('/api/marks', {
                     method: 'POST',
@@ -404,14 +485,23 @@
                 });
                 
                 if (response.ok) {
-                    alert('Marks saved successfully! 📝\n\nYou can now use the "Online Update" button in Excel to import these marks.');
+                    const result = await response.json();
+                    
+                    // Show setup instructions
+                    const setupInstructions = result.instructions;
+                    const instructions = setupInstructions.setup_instructions.join('\n');
+                    
+                    alert(`📝 Marks prepared for saving!\n\n` +
+                          `To make these marks permanent, please add this environment variable in Vercel:\n\n` +
+                          `Variable Name: ${setupInstructions.variable_name}\n` +
+                          `Variable Value: ${setupInstructions.variable_value}\n\n` +
+                          `Steps:\n${instructions}\n\n` +
+                          `After adding the variable and redeploying, Excel will be able to fetch these marks.`);
                 } else {
-                    // Fallback to local storage if server save fails
-                    alert('Marks saved locally! 📝\n\nNote: Server save failed, but marks are stored in your browser.\nYou can still use the "Online Update" button in Excel.');
+                    alert('Marks saved locally! 📝\n\nNote: Server setup instructions not available, but marks are stored in your browser.');
                 }
             } catch (error) {
-                // Fallback to local storage if server is unavailable
-                alert('Marks saved locally! 📝\n\nNote: Could not connect to server, but marks are stored in your browser.\nYou can still use the "Online Update" button in Excel.');
+                alert('Marks saved locally! 📝\n\nNote: Could not connect to server for setup instructions, but marks are stored in your browser.');
             }
         }
         
