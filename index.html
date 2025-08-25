@@ -3,542 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marks Updater</title>
+    <title>Subject Marks Updater</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
             min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
         }
         
         .container {
+            width: 100%;
             max-width: 800px;
-            margin: 0 auto;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             overflow: hidden;
         }
         
-        .header {
-            background: #2c3e50;
+        header {
+            background: #4a6fc0;
             color: white;
             padding: 20px;
             text-align: center;
         }
         
-        .subject-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 30px;
-        }
-        
-        .subject-card {
-            background: #f8f9fa;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .subject-card:hover {
-            background: #e3f2fd;
-            border-color: #2196f3;
-            transform: translateY(-2px);
-        }
-        
-        .subject-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c3e50;
+        h1 {
+            font-size: 28px;
             margin-bottom: 10px;
         }
         
-        .subject-code {
-            font-size: 14px;
-            color: #666;
+        .subject-selector {
+            padding: 20px;
+            background: #f5f7fa;
+            text-align: center;
         }
         
-        .marks-editor {
-            display: none;
-            padding: 30px;
+        select, input, button {
+            padding: 12px 15px;
+            margin: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
         }
         
-        .back-btn {
-            background: #6c757d;
+        button {
+            background: #4a6fc0;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
             cursor: pointer;
-            margin-bottom: 20px;
+            transition: background 0.3s;
         }
         
-        .marks-input-area {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+        button:hover {
+            background: #3b5998;
         }
         
-        .marks-textarea {
+        .password-screen, .marks-editor {
+            padding: 25px;
+            display: none;
+        }
+        
+        .password-screen h2, .marks-editor h2 {
+            color: #3b5998;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .password-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .password-form input {
+            width: 250px;
+        }
+        
+        .marks-table {
             width: 100%;
-            height: 400px;
-            border: 2px solid #dee2e6;
-            border-radius: 5px;
-            padding: 15px;
-            font-size: 16px;
-            font-family: monospace;
-            resize: vertical;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
         
-        .marks-textarea:focus {
-            outline: none;
-            border-color: #007bff;
+        .marks-table th, .marks-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .marks-table th {
+            background-color: #f2f2f2;
+        }
+        
+        .marks-table input {
+            width: 80px;
+            text-align: center;
+            padding: 8px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 25px;
+            gap: 15px;
+        }
+        
+        .action-buttons button {
+            padding: 12px 25px;
         }
         
         .save-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
+            background: #2ecc71;
         }
         
         .save-btn:hover {
-            background: #218838;
+            background: #27ae60;
         }
         
-        .password-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
+        .cancel-btn {
+            background: #e74c3c;
         }
         
-        .password-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            min-width: 300px;
+        .cancel-btn:hover {
+            background: #c0392b;
         }
         
-        .password-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #dee2e6;
-            border-radius: 5px;
-            font-size: 16px;
-            margin: 15px 0;
-        }
-        
-        .password-btn {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        
-        .password-btn.cancel {
-            background: #6c757d;
-        }
-        
-        .info-text {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
-        .current-subject {
-            background: #e8f5e8;
+        .notification {
             padding: 15px;
+            margin: 20px 0;
             border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #28a745;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 15px;
+            background: #f5f7fa;
+            color: #6c757d;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📚 Marks Updater</h1>
-            <p>Select a subject to edit marks</p>
-            <button onclick="showSetupHelper()" style="background: #17a2b8; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">⚙️ Setup Helper</button>
-            <div id="setupHelper" class="marks-editor" style="display: none;">
-            <button class="back-btn" onclick="showSubjectSelection()">← Back to Subjects</button>
-            
-            <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <h3>🔧 Environment Variables Setup Helper</h3>
-                <p>This tool helps you set up permanent storage using Vercel Environment Variables.</p>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                <h4>Quick Setup (Recommended)</h4>
-                <p>1. Save marks for any subject using the interface above</p>
-                <p>2. The system will show you the exact environment variable to create</p>
-                <p>3. Go to Vercel Dashboard → Settings → Environment Variables</p>
-                <p>4. Add the variable and redeploy</p>
-            </div>
-            
-            <button onclick="generateSampleCommands()" class="save-btn" style="margin-bottom: 20px;">
-                Generate Sample CLI Commands
-            </button>
-            
-            <div id="setupOutput" style="background: #f8f9fa; padding: 15px; border-radius: 5px; min-height: 100px; font-family: monospace; white-space: pre-wrap; display: none;">
-            </div>
-            
-            <button onclick="checkStatus()" class="back-btn" style="background: #28a745;">
-                Check Current Status
-            </button>
+        <header>
+            <h1>Subject Marks Updater</h1>
+            <p>Remote marks management system for teachers</p>
+        </header>
+        
+        <div class="subject-selector" id="subjectSelector">
+            <h2>Select Subject</h2>
+            <select id="subjectDropdown">
+                <option value="">-- Choose Subject --</option>
+                <option value="Agr">Agriculture (Agr)</option>
+                <option value="Bk">Book Keeping (Bk)</option>
+                <option value="Bio">Biology (Bio)</option>
+                <option value="Chem">Chemistry (Chem)</option>
+                <option value="Chich">Chichewa (Chich)</option>
+                <option value="Comp">Computer Studies (Comp)</option>
+                <option value="Eng">English (Eng)</option>
+                <option value="Geo">Geography (Geo)</option>
+                <option value="Hist">History (Hist)</option>
+                <option value="Phy">Physics (Phy)</option>
+                <option value="Math">Mathematics (Math)</option>
+                <option value="Sos">Social Studies (Sos)</option>
+            </select>
+            <button onclick="selectSubject()">Continue</button>
         </div>
         
-        <div id="subjectSelection" class="subject-grid">
-            <div class="subject-card" data-subject="Agr" data-column="B">
-                <div class="subject-name">Agriculture</div>
-                <div class="subject-code">Column B</div>
-            </div>
-            <div class="subject-card" data-subject="Bk" data-column="C">
-                <div class="subject-name">Book Keeping</div>
-                <div class="subject-code">Column C</div>
-            </div>
-            <div class="subject-card" data-subject="Bio" data-column="D">
-                <div class="subject-name">Biology</div>
-                <div class="subject-code">Column D</div>
-            </div>
-            <div class="subject-card" data-subject="Chem" data-column="E">
-                <div class="subject-name">Chemistry</div>
-                <div class="subject-code">Column E</div>
-            </div>
-            <div class="subject-card" data-subject="Chich" data-column="F">
-                <div class="subject-name">Chichewa</div>
-                <div class="subject-code">Column F</div>
-            </div>
-            <div class="subject-card" data-subject="Comp" data-column="G">
-                <div class="subject-name">Computer</div>
-                <div class="subject-code">Column G</div>
-            </div>
-            <div class="subject-card" data-subject="Eng" data-column="H">
-                <div class="subject-name">English</div>
-                <div class="subject-code">Column H</div>
-            </div>
-            <div class="subject-card" data-subject="Geo" data-column="I">
-                <div class="subject-name">Geography</div>
-                <div class="subject-code">Column I</div>
-            </div>
-            <div class="subject-card" data-subject="Hist" data-column="J">
-                <div class="subject-name">History</div>
-                <div class="subject-code">Column J</div>
-            </div>
-            <div class="subject-card" data-subject="Phy" data-column="K">
-                <div class="subject-name">Physics</div>
-                <div class="subject-code">Column K</div>
-            </div>
-            <div class="subject-card" data-subject="Math" data-column="L">
-                <div class="subject-name">Mathematics</div>
-                <div class="subject-code">Column L</div>
-            </div>
-            <div class="subject-card" data-subject="Sos" data-column="M">
-                <div class="subject-name">Social Studies</div>
-                <div class="subject-code">Column M</div>
+        <div class="password-screen" id="passwordScreen">
+            <h2 id="passwordSubject">Enter Password</h2>
+            <div class="password-form">
+                <input type="password" id="passwordInput" placeholder="Enter subject password">
+                <button onclick="checkPassword()">Access Marks</button>
             </div>
         </div>
         
-        <div id="marksEditor" class="marks-editor">
-            <button class="back-btn" onclick="showSubjectSelection()">← Back to Subjects</button>
+        <div class="marks-editor" id="marksEditor">
+            <h2 id="editorTitle">Edit Marks for <span id="subjectName"></span></h2>
             
-            <div class="current-subject">
-                <strong>Current Subject: </strong><span id="currentSubjectName"></span>
-                <br><strong>Column: </strong><span id="currentColumn"></span>
-            </div>
+            <div class="notification" id="notification"></div>
             
-            <div class="marks-input-area">
-                <div class="info-text">
-                    Enter marks (whole numbers only), one per line. Each line represents a student's mark.
-                </div>
-                <textarea 
-                    id="marksInput" 
-                    class="marks-textarea" 
-                    placeholder="Enter marks here, one per line:&#10;85&#10;92&#10;78&#10;90&#10;..."
-                ></textarea>
-            </div>
+            <table class="marks-table">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Marks</th>
+                    </tr>
+                </thead>
+                <tbody id="marksTableBody">
+                    <!-- Marks will be populated here -->
+                </tbody>
+            </table>
             
-            <button class="save-btn" onclick="saveMarks()">💾 Save Marks</button>
-        </div>
-    </div>
-    
-    </div>
-    
-    <div id="passwordModal" class="password-modal">
-        <div class="password-content">
-            <h3>Enter Password</h3>
-            <p>Please enter the password for <strong><span id="passwordSubjectName"></span></strong></p>
-            <input type="password" id="passwordInput" class="password-input" placeholder="Enter password">
-            <div>
-                <button class="password-btn" onclick="verifyPassword()">Enter</button>
-                <button class="password-btn cancel" onclick="closePasswordModal()">Cancel</button>
+            <div class="action-buttons">
+                <button class="save-btn" onclick="saveMarks()">Save Marks</button>
+                <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
             </div>
         </div>
+        
+        <footer>
+            <p>Secure Marks Updater System | © 2023 School Name</p>
+        </footer>
     </div>
 
     <script>
-        // Subject passwords - you can change these
+        // Subject passwords (in a real application, these would be stored securely on the server)
         const subjectPasswords = {
-            'Agr': 'agr123',
-            'Bk': 'bk123',
-            'Bio': 'bio123',
-            'Chem': 'chem123',
-            'Chich': 'chich123',
-            'Comp': 'comp123',
-            'Eng': 'eng123',
-            'Geo': 'geo123',
-            'Hist': 'hist123',
-            'Phy': 'phy123',
-            'Math': 'math123',
-            'Sos': 'sos123'
+            'Agr': 'AGR123',
+            'Bk': 'BK456',
+            'Bio': 'BIO789',
+            'Chem': 'CHEM012',
+            'Chich': 'CHICH345',
+            'Comp': 'COMP678',
+            'Eng': 'ENG901',
+            'Geo': 'GEO234',
+            'Hist': 'HIST567',
+            'Phy': 'PHY890',
+            'Math': 'MATH123',
+            'Sos': 'SOS456'
         };
-
-        let currentSubject = '';
-        let currentColumn = '';
         
-        // Load marks from localStorage
-        function loadMarks(subject) {
-            const saved = localStorage.getItem(`marks_${subject}`);
-            return saved || '';
-        }
+        // Sample marks data (in a real application, this would come from a database)
+        let marksData = {};
         
-        // Save marks to localStorage
-        function saveMarksToStorage(subject, marks) {
-            localStorage.setItem(`marks_${subject}`, marks);
-        }
-        
-        // Show setup helper
-        function showSetupHelper() {
-            document.getElementById('subjectSelection').style.display = 'none';
-            document.getElementById('marksEditor').style.display = 'none';
-            document.getElementById('setupHelper').style.display = 'block';
-        }
-        
-        // Generate sample CLI commands
-        async function generateSampleCommands() {
-            try {
-                const response = await fetch('/api/setup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ generateAll: true })
-                });
-                
-                const result = await response.json();
-                const output = document.getElementById('setupOutput');
-                
-                output.textContent = `Sample CLI Commands:\n\n${result.commands.join('\n\n')}\n\n` +
-                                   `Note: ${result.note}\n\n` +
-                                   `Sample marks that will be set:\n${result.sample_marks}`;
-                output.style.display = 'block';
-            } catch (error) {
-                document.getElementById('setupOutput').textContent = 'Error generating commands: ' + error.message;
-                document.getElementById('setupOutput').style.display = 'block';
-            }
-        }
-        
-        // Check current status
-        async function checkStatus() {
-            try {
-                const response = await fetch('/api/setup');
-                const result = await response.json();
-                const output = document.getElementById('setupOutput');
-                
-                let statusText = 'Current Environment Variables Status:\n\n';
-                
-                Object.entries(result.status).forEach(([subject, info]) => {
-                    const status = info.hasData ? '✅ SET' : '❌ NOT SET';
-                    statusText += `${subject} (${info.variable}): ${status}\n`;
-                });
-                
-                output.textContent = statusText;
-                output.style.display = 'block';
-            } catch (error) {
-                document.getElementById('setupOutput').textContent = 'Error checking status: ' + error.message;
-                document.getElementById('setupOutput').style.display = 'block';
-            }
-        }
-        
-        // Update showSubjectSelection to hide setup helper too
-        function showSubjectSelection() {
-            document.getElementById('subjectSelection').style.display = 'grid';
-            document.getElementById('marksEditor').style.display = 'none';
-            document.getElementById('setupHelper').style.display = 'none';
-        }
-        
-        // Show password modal
-        function showPasswordModal(subject, column, subjectName) {
-            currentSubject = subject;
-            currentColumn = column;
-            document.getElementById('passwordSubjectName').textContent = subjectName;
-            document.getElementById('passwordModal').style.display = 'block';
-            document.getElementById('passwordInput').value = '';
-            document.getElementById('passwordInput').focus();
-        }
-        
-        // Close password modal
-        function closePasswordModal() {
-            document.getElementById('passwordModal').style.display = 'none';
-        }
-        
-        // Verify password
-        function verifyPassword() {
-            const enteredPassword = document.getElementById('passwordInput').value;
-            const correctPassword = subjectPasswords[currentSubject];
-            
-            if (enteredPassword === correctPassword) {
-                closePasswordModal();
-                showMarksEditor();
-            } else {
-                alert('Incorrect password. Please try again.');
-                document.getElementById('passwordInput').value = '';
-                document.getElementById('passwordInput').focus();
-            }
-        }
-        
-        // Show marks editor
-        function showMarksEditor() {
-            document.getElementById('subjectSelection').style.display = 'none';
-            document.getElementById('marksEditor').style.display = 'block';
-            
-            const subjectNames = {
-                'Agr': 'Agriculture',
-                'Bk': 'Book Keeping',
-                'Bio': 'Biology',
-                'Chem': 'Chemistry',
-                'Chich': 'Chichewa',
-                'Comp': 'Computer',
-                'Eng': 'English',
-                'Geo': 'Geography',
-                'Hist': 'History',
-                'Phy': 'Physics',
-                'Math': 'Mathematics',
-                'Sos': 'Social Studies'
-            };
-            
-            document.getElementById('currentSubjectName').textContent = subjectNames[currentSubject];
-            document.getElementById('currentColumn').textContent = currentColumn;
-            
-            // Load existing marks
-            const existingMarks = loadMarks(currentSubject);
-            document.getElementById('marksInput').value = existingMarks;
-        }
-        
-        // Save marks
-        async function saveMarks() {
-            const marks = document.getElementById('marksInput').value;
-            
-            // Validate marks (whole numbers only)
-            const lines = marks.split('\n').filter(line => line.trim() !== '');
-            const invalidLines = lines.filter(line => {
-                const trimmed = line.trim();
-                return trimmed !== '' && (!Number.isInteger(Number(trimmed)) || Number(trimmed) < 0);
+        // Initialize with some sample data
+        function initializeData() {
+            const subjects = ['Agr', 'Bk', 'Bio', 'Chem', 'Chich', 'Comp', 'Eng', 'Geo', 'Hist', 'Phy', 'Math', 'Sos'];
+            subjects.forEach(subject => {
+                marksData[subject] = [];
+                for (let i = 1; i <= 40; i++) {
+                    // Start with some random marks between 50 and 100
+                    marksData[subject].push(Math.floor(Math.random() * 51) + 50);
+                }
             });
+        }
+        
+        let currentSubject = '';
+        
+        function selectSubject() {
+            const subjectSelect = document.getElementById('subjectDropdown');
+            currentSubject = subjectSelect.value;
             
-            if (invalidLines.length > 0) {
-                alert('Please enter only whole numbers (positive integers). Invalid entries found:\n' + invalidLines.join('\n'));
+            if (!currentSubject) {
+                alert('Please select a subject');
                 return;
             }
             
-            // Save locally first
-            saveMarksToStorage(currentSubject, marks);
+            document.getElementById('subjectSelector').style.display = 'none';
+            document.getElementById('passwordScreen').style.display = 'block';
+            document.getElementById('passwordSubject').textContent = `Enter Password for ${subjectSelect.options[subjectSelect.selectedIndex].text}`;
+        }
+        
+        function checkPassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const password = passwordInput.value;
             
-            // Also save to server (will provide setup instructions)
-            try {
-                const response = await fetch('/api/marks', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        subject: currentSubject,
-                        marks: marks
-                    })
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    
-                    // Show setup instructions
-                    const setupInstructions = result.instructions;
-                    const instructions = setupInstructions.setup_instructions.join('\n');
-                    
-                    alert(`📝 Marks prepared for saving!\n\n` +
-                          `To make these marks permanent, please add this environment variable in Vercel:\n\n` +
-                          `Variable Name: ${setupInstructions.variable_name}\n` +
-                          `Variable Value: ${setupInstructions.variable_value}\n\n` +
-                          `Steps:\n${instructions}\n\n` +
-                          `After adding the variable and redeploying, Excel will be able to fetch these marks.`);
-                } else {
-                    alert('Marks saved locally! 📝\n\nNote: Server setup instructions not available, but marks are stored in your browser.');
-                }
-            } catch (error) {
-                alert('Marks saved locally! 📝\n\nNote: Could not connect to server for setup instructions, but marks are stored in your browser.');
+            if (password === subjectPasswords[currentSubject]) {
+                document.getElementById('passwordScreen').style.display = 'none';
+                document.getElementById('marksEditor').style.display = 'block';
+                document.getElementById('subjectName').textContent = document.getElementById('subjectDropdown').options[document.getElementById('subjectDropdown').selectedIndex].text;
+                loadMarks();
+            } else {
+                alert('Incorrect password. Please try again.');
+                passwordInput.value = '';
+                passwordInput.focus();
             }
         }
         
-        // Add event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Subject card clicks
-            document.querySelectorAll('.subject-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    const subject = this.dataset.subject;
-                    const column = this.dataset.column;
-                    const subjectName = this.querySelector('.subject-name').textContent;
-                    showPasswordModal(subject, column, subjectName);
-                });
-            });
+        function loadMarks() {
+            const tableBody = document.getElementById('marksTableBody');
+            tableBody.innerHTML = '';
             
-            // Enter key for password
-            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    verifyPassword();
-                }
-            });
+            if (!marksData[currentSubject]) {
+                initializeData();
+            }
             
-            // Click outside modal to close
-            document.getElementById('passwordModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closePasswordModal();
-                }
+            marksData[currentSubject].forEach((mark, index) => {
+                const row = document.createElement('tr');
+                
+                const idCell = document.createElement('td');
+                idCell.textContent = index + 1;
+                
+                const markCell = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.min = '0';
+                input.max = '100';
+                input.value = mark;
+                input.id = `mark-${index}`;
+                markCell.appendChild(input);
+                
+                row.appendChild(idCell);
+                row.appendChild(markCell);
+                
+                tableBody.appendChild(row);
             });
-        });
-        
-        // API endpoint for Excel to fetch marks
-        function getMarksForSubject(subject) {
-            return loadMarks(subject);
         }
         
-        // Make function available globally for external access
-        window.getMarksForSubject = getMarksForSubject;
+        function saveMarks() {
+            const newMarks = [];
+            let hasError = false;
+            
+            for (let i = 0; i < marksData[currentSubject].length; i++) {
+                const input = document.getElementById(`mark-${i}`);
+                const value = parseInt(input.value);
+                
+                if (isNaN(value) || value < 0 || value > 100) {
+                    showNotification('Please enter valid marks between 0 and 100 for all students', 'error');
+                    input.focus();
+                    hasError = true;
+                    break;
+                }
+                
+                newMarks.push(value);
+            }
+            
+            if (!hasError) {
+                marksData[currentSubject] = newMarks;
+                showNotification('Marks saved successfully!', 'success');
+                
+                // In a real application, you would send this data to the server here
+                setTimeout(() => {
+                    document.getElementById('notification').style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification ' + type;
+            notification.style.display = 'block';
+        }
+        
+        function cancelEdit() {
+            document.getElementById('marksEditor').style.display = 'none';
+            document.getElementById('passwordScreen').style.display = 'none';
+            document.getElementById('subjectSelector').style.display = 'block';
+            document.getElementById('passwordInput').value = '';
+        }
+        
+        // Initialize the application
+        initializeData();
     </script>
 </body>
 </html>
